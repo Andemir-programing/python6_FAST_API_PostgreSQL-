@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres:15.2-alpine
+    environment:
+      POSTGRES_DB: ilyas_db
+      POSTGRES_USER: ilyas
+      POSTGRES_PASSWORD: admin123
+    ports:
+    - "5432:5432"
+
+
+# docker-compose up -d --build
+# docker-compose down

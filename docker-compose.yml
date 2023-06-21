@@ -1,15 +1,37 @@
-version: '3.7'
+version: '2.1'
 
 services:
-  db:
-    image: postgres:15.2-alpine
+  postgres_db:
+    image: postgres:15.2-bullseye
     environment:
-      POSTGRES_DB: ilyas_db
-      POSTGRES_USER: ilyas
-      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-    - "5432:5432"
+    - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    healthcheck:  # устанавливает значение True для condition если pg_isready==True
+      test: ["CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate_table:
+    build: .
+    command: bash -c "alembic upgrade head"
+    container_name: migrate_table
+    environment:
+      SQLALCHEMY_DATABASE_URI: "postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST_IN_DOCKER}:${POSTGRES_PORT}/${POSTGRES_DB}"
+    depends_on:
+      postgres_db:
+        condition: service_healthy  # проверяем живой ли сервис pg?
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
 
 
 # docker-compose up -d --build
 # docker-compose down
+# docker run -p 8080:8080 -it ade4cc13f3a0
